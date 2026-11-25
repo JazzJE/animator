@@ -1,0 +1,600 @@
+/* All styling for the Animator app. Its code only attaches class names. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+
+/* ── Layout: two columns ─────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: #1a1a2e;
+  color: #d4c5a0;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
+/* Left column: the code editor. */
+.code-col {
+  width: 42%;
+  min-width: 320px;
+  max-width: 720px;
+  flex-shrink: 0;
+  display: flex;
+  border-right: 1px solid #3a3a5e;
+  background: #0f0f1e;
+}
+
+/* The code column stays in the DOM when collapsed, so CodeMirror keeps its
+   state; hiding it gives the right column the full width. */
+.app.code-hidden .code-col { display: none; }
+
+.drawing-workspace {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+
+.mode-menu {
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 20%, #29264a 0%, #10101f 55%, #080811 100%);
+  color: #eee6d2;
+  font-family: system-ui, sans-serif;
+}
+
+.mode-menu-card {
+  width: min(100%, 560px);
+  max-height: calc(100vh - 48px);
+  padding: clamp(28px, 6vw, 56px);
+  border: 1px solid #45416d;
+  border-radius: 18px;
+  background: rgb(17 17 34 / 92%);
+  box-shadow: 0 24px 90px rgb(0 0 0 / 45%);
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-eyebrow {
+  margin-bottom: 12px;
+  color: #89ddff;
+  font: 700 11px/1.2 ui-monospace, monospace;
+  letter-spacing: .2em;
+}
+
+.menu-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0 24px;
+  border-bottom: 1px solid #3d3b62;
+}
+
+.menu-tab {
+  padding: 9px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #aaa9bf;
+  cursor: pointer;
+  font: inherit;
+}
+
+.menu-tab.active {
+  border-bottom-color: #89ddff;
+  color: #f4e9cf;
+}
+
+.game-rules {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  gap: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 8px;
+}
+.game-rules h1 { margin-bottom: 4px; }
+.game-rules p { color: #c0bfd1; line-height: 1.55; }
+
+.mode-menu-card h1 {
+  color: #f4e9cf;
+  font: 600 clamp(28px, 5vw, 40px)/1.12 Georgia, serif;
+}
+
+.menu-description {
+  margin-top: 12px;
+  color: #aaa9bf;
+  line-height: 1.6;
+}
+
+.mode-options {
+  display: grid;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #3d3b62;
+  border-radius: 10px;
+  background: #1a1a32;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+
+.mode-option:hover {
+  transform: translateY(-2px);
+  border-color: #89ddff;
+  background: #222343;
+}
+
+.mode-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  background: #2d2d50;
+  color: #89ddff;
+  font-size: 23px;
+}
+
+.mode-option-copy { display: grid; gap: 4px; flex: 1; }
+.mode-option-copy strong { color: #f1e6ce; font-size: 15px; }
+.mode-option-copy span { color: #aaa9bf; font-size: 12px; }
+.mode-arrow { color: #89ddff; font-size: 20px; }
+
+.back-button, .mode-return {
+  border: 1px solid #4a4a8a;
+  border-radius: 5px;
+  background: #252542;
+  color: #d4c5a0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.back-button { margin-top: 28px; padding: 9px 13px; }
+.back-button:hover, .mode-return:hover { background: #35355d; }
+
+.mode-return {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 12px;
+  padding: 6px 10px;
+}
+
+/* A small emoji button (the code pane's collapse toggle, and the playback
+   controls once they exist). */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a4a;
+  color: #d4c5a0;
+  border: 1px solid #4a4a8a;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 5px 8px;
+}
+.icon-btn:hover { background: #3a3a5e; }
+
+/* ── Code panel (left column) ───────────────────────────────────────────── */
+
+.code-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #1a1a3e;
+  border-bottom: 1px solid #3a3a5e;
+}
+.code-title {
+  color: #e8d8b0;
+  font-family: 'Georgia', serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+.drawing-select {
+  flex: 1 1 150px;
+  min-width: 0;
+  max-width: 220px;
+  padding: 6px 8px;
+  border: 1px solid #4a4a8a;
+  border-radius: 4px;
+  background: #0d0d1a;
+  color: #d4c5a0;
+  font: inherit;
+}
+
+/* Wrapper holding the editor. */
+.code-editor-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+/* CodeMirror mount node: grows to fill the panel. */
+.code-editor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: #0d0d1a;
+}
+.code-editor .cm-editor { width: 100%; height: 100%; }
+
+/* Collapsible reference of the built-ins available to draw functions. */
+.reference {
+  margin: 8px 14px 0;
+  border: 1px solid #3a3a5e;
+  border-radius: 4px;
+  background: #0d0d1a;
+  overflow: hidden;
+}
+.reference-summary {
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #b8a888;
+  font-family: monospace;
+  font-size: 12px;
+  user-select: none;
+}
+.reference-summary:hover { color: #e8d8b0; }
+.reference-body {
+  padding: 4px 12px 10px;
+  border-top: 1px solid #3a3a5e;
+}
+.reference-group { margin-top: 8px; }
+.reference-group-title {
+  color: #8a8aca;
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.reference-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 1px 0;
+}
+.reference-sig {
+  color: #89ddff;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre;
+}
+.reference-desc { color: #6a7a8a; font-size: 11px; }
+
+/* ── Animation area (right column) ──────────────────────────────────────── */
+
+.canvas-area {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a14;
+  container-type: size;
+}
+
+.mode-switcher {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mode-switch {
+  padding: 7px 10px;
+  border: 1px solid #4a4a8a;
+  border-radius: 6px;
+  background: rgb(24 24 44 / 94%);
+  color: #c0bfd1;
+  cursor: pointer;
+  font: inherit;
+}
+
+.mode-switch:hover { background: #35355d; }
+.mode-switch.active {
+  border-color: #89ddff;
+  color: #f4e9cf;
+  box-shadow: 0 0 12px rgb(137 221 255 / 18%);
+}
+
+.modes-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(5 5 15 / 76%);
+}
+
+.modes-popup {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 440px);
+  padding: 24px;
+  border: 1px solid #45416d;
+  border-radius: 14px;
+  background: #111122;
+  color: #eee6d2;
+  box-shadow: 0 24px 90px rgb(0 0 0 / 45%);
+}
+
+.modes-popup h1 {
+  margin: 0 0 4px;
+  color: #f4e9cf;
+  font: 600 28px/1.12 Georgia, serif;
+  text-align: center;
+}
+
+.mode-popup-choice {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #45416d;
+  border-radius: 8px;
+  background: #1a1a32;
+  color: #eee6d2;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.mode-popup-choice:hover,
+.mode-popup-choice.active {
+  border-color: #89ddff;
+  background: #222744;
+}
+
+.mode-popup-choice span {
+  color: #aaa9bf;
+  font-size: 12px;
+}
+
+.modes-popup .rules-close { justify-self: end; }
+.modes-popup .rules-switch { justify-self: start; }
+
+.rules-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(5 5 15 / 82%);
+}
+
+.rules-overlay-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(100%, 760px);
+  max-height: 100%;
+  padding: 28px;
+  border: 1px solid #45416d;
+  border-radius: 14px;
+  background: #111122;
+  color: #eee6d2;
+  box-shadow: 0 24px 90px rgb(0 0 0 / 45%);
+}
+
+.rules-close {
+  align-self: flex-end;
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid #4a4a8a;
+  border-radius: 5px;
+  background: #252542;
+  color: #d4c5a0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.rules-close:hover { background: #35355d; }
+
+.game-hint {
+  position: absolute;
+  top: 52px;
+  left: 12px;
+  z-index: 4;
+  padding: 9px 13px;
+  border: 1px solid rgb(137 221 255 / 25%);
+  border-radius: 8px;
+  background: rgb(10 10 20 / 82%);
+  color: #cfe3ff;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.game-status {
+  position: absolute;
+  top: 104px;
+  left: 12px;
+  z-index: 4;
+  padding: 9px 13px;
+  border: 1px solid rgb(137 221 255 / 25%);
+  border-radius: 8px;
+  background: rgb(10 10 20 / 82%);
+  color: #cfe3ff;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.game-over {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(5 5 15 / 78%);
+}
+
+.game-over-card {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 440px);
+  padding: 30px;
+  border: 1px solid #4a4a8a;
+  border-radius: 12px;
+  background: #17172b;
+  color: #eee6d2;
+  text-align: center;
+}
+
+.game-over-card h1 { font-size: 28px; }
+.game-over-card > p:not(.menu-eyebrow) { color: #aaaac3; }
+
+.game-over-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.game-over-actions .back-button { margin-top: 0; }
+.game-over-button {
+  width: auto;
+  gap: 0;
+  padding: 6px 10px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+/* The interpreter's List(Path) (or its error), shown as text before the
+   animation pane is built. */
+.output {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  max-width: min(60%, 42rem);
+  max-height: 30%;
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  border-radius: 6px;
+  background: rgb(10 10 20 / 85%);
+  z-index: 2;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cfe3ff;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+/* Leave room for the reveal button, which only overlays this pane while the
+   code column is hidden. */
+.app.code-hidden .output { padding-top: 48px; }
+
+/* Button that reveals the code column again when it is hidden. */
+.reveal-code {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+}
+
+/* The Modes button occupies the same corner when the editor is collapsed. */
+.app.code-hidden .reveal-code { left: 82px; }
+
+.animation-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100% - 24px);
+}
+
+.slider-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+  padding: 8px 10px;
+  border: 1px solid #3a3a5e;
+  border-radius: 6px;
+  background: rgb(10 10 20 / 90%);
+  color: #d4c5a0;
+  font-size: 12px;
+}
+
+.slider-control input {
+  width: 100%;
+  margin: 0;
+  accent-color: #89ddff;
+}
+
+.playback-buttons {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.playback-button {
+  padding: 6px 12px;
+  border: 1px solid #4a4a8a;
+  border-radius: 4px;
+  background: #2a2a4a;
+  color: #d4c5a0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.playback-button:hover { background: #3a3a5e; }
+
+/* A centred square that fits the (possibly non-square) animation area. Give your
+   <canvas> this class, so that drawings aren't stretched. */
+.canvas {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.canvas:focus { outline: none; }
+
